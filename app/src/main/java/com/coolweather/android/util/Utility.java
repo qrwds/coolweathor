@@ -5,6 +5,10 @@ import android.text.TextUtils;
 import com.coolweather.android.db.City;
 import com.coolweather.android.db.Country;
 import com.coolweather.android.db.Province;
+import com.coolweather.android.gson.Weather;
+import com.coolweather.android.gson.WeatherCond;
+import com.coolweather.android.gson.WeatherNow;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,7 +64,7 @@ public class Utility {
                    JSONObject countryObject=allCountrys.getJSONObject(i);
                     Country country=new Country();
                     country.setCountryName(countryObject.getString("name"));
-                    country.setCountryCode(countryObject.getInt("id"));
+                    country.setWeatherId(countryObject.getString("weather_id"));
                     country.setCityId(cityId);
                     country.save();
                 }
@@ -70,6 +74,28 @@ public class Utility {
             }
         }
         return false;
+    }
+    public static Weather handlerWeatherResponse(String response){
+        try{
+            JSONObject jsonObject=new JSONObject(response);
+            JSONArray jsonArray=jsonObject.getJSONArray("HeWeather");
+            String weatherContent=jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent,Weather.class);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public static WeatherCond handlerWeatherNowResponse(String response){
+        try{
+            JSONObject jsonObject=new JSONObject(response);
+            JSONArray jsonArray=jsonObject.getJSONArray("HeWeather6");
+            String weatherContent=jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent,WeatherCond.class);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
     }
 
