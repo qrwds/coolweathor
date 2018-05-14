@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary">
+        
+        <Button
+            android:id="@+id/choose_city_back"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginLeft="10dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/back_button" />
+        <EditText
+            android:id="@+id/choose_input_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:layout_toRightOf="@+id/choose_city_back"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="30dp"
+            android:textColorHint="#7effffff"
+            android:hint="搜索城市"
+            android:maxLines="1"/>
+        <Button
+            android:id="@+id/qingchu_button"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:background="@drawable/ic_qingchu"
+            android:layout_marginRight="25dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"/>
+    </RelativeLayout>
+    <ListView
+        android:id="@+id/info_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        />
+</LinearLayout>

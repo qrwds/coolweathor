@@ -1,16 +1,23 @@
 package com.coolweather.android;
 
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.coolweather.android.db.AddCity;
 import com.coolweather.android.gson.Forecast;
 import com.coolweather.android.gson.Weather;
 import com.coolweather.android.gson.WeatherCond;
@@ -30,8 +38,13 @@ import com.coolweather.android.service.AutoUpdateService;
 import com.coolweather.android.util.HttpCallbackListener;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.Utility;
+import com.coolweather.android.util.WeatherIconJud;
+
+import org.litepal.crud.DataSupport;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -59,12 +72,19 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView fengSuIcon;
     private TextView shiDuIcon;
     private TextView ziWaiXianIcon;
-    private Typeface iconfont;
     private ImageView bingPicImg;
     public SwipeRefreshLayout swipeRefreshLayout;
     private String mWeatherId;
     public DrawerLayout drawerLayout;
+    private Typeface iconfont;
     private Button navButton;
+    private IntentFilter intentFilter;
+    private LocalReceiver localReceiver;
+    private LocalBroadcastManager localBroadcastManager;
+    private RecyclerView recyclerView;
+    private List<AddCity> addCityList;
+    private AddCityAdapter adapter;
+    private LinearLayout addLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +95,13 @@ public class WeatherActivity extends AppCompatActivity {
             getWindow().setStatusBarColor(Color.TRANSPARENT);
         }
         setContentView(R.layout.activity_weather);
+        localBroadcastManager=LocalBroadcastManager.getInstance(this);
+        intentFilter=new IntentFilter();
+        intentFilter.addAction("com.coolweather.android.LOCAL_BROADCAST");
+        localReceiver=new LocalReceiver();
+        localBroadcastManager.registerReceiver(localReceiver,intentFilter);
+        addCityList= DataSupport.findAll(AddCity.class);
+
         weatherLayout=(ScrollView)findViewById(R.id.weather_layout);
         updateTimeText=(TextView)findViewById(R.id.update_time);
         titleCity=(TextView)findViewById(R.id.title_city);
@@ -100,27 +127,49 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
         drawerLayout=(DrawerLayout)findViewById(R.id.drawer_layout);
         navButton=(Button)findViewById(R.id.nav_button);
+        addLocation=(LinearLayout) findViewById(R.id.add_city_layout);
+        recyclerView=(RecyclerView)findViewById(R.id.add_city_recyclerview);
         iconfont=Typeface.createFromAsset(getAssets(),"iconfont/iconfont.ttf");
         shiDuIcon.setTypeface(iconfont);
         fengSuIcon.setTypeface(iconfont);
         ziWaiXianIcon.setTypeface(iconfont);
+
         navButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
+        addLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(WeatherActivity.this,CityChoose.class);
+                startActivity(intent);
+            }
+        });
+        adapter=new AddCityAdapter(addCityList,iconfont,this);
+        LinearLayoutManager layoutManager=new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(adapter);
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString=prefs.getString("weather",null);
         String weatherCondString=prefs.getString("weatherCond",null);
         if (weatherCondString!=null){
-            WeatherCond weatherCond=Utility.handlerWeatherNowResponse(weatherCondString);
+           WeatherCond weatherCond=Utility.handlerWeatherNowResponse(weatherCondString);
             mWeatherId=weatherCond.basic.weatherId;
             showWeatherCondInfo(weatherCond);
         }else {
             mWeatherId=getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeatherCond(mWeatherId);
+                   /*AddCity addCity = new AddCity();
+                    addCity.setWeatherId(weatherCond.basic.weatherId);
+                    addCity.setCityName(weatherCond.basic.cityName);
+                    addCity.setWeatherInfo(weatherCond.now.weatherInfo);
+                    addCity.setWeatherTmp(weatherCond.now.tmp);
+                    addCity.save();
+                    addCityList=DataSupport.findAll(AddCity.class);
+                    adapter.notifyDataSetChanged();*/
         }
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
             @Override
@@ -190,6 +239,15 @@ public class WeatherActivity extends AppCompatActivity {
                             editor.putString("weather",responseText);
                             editor.apply();
                             showWeatherInfo(weather);
+                            if (DataSupport.where("cityname=?",weather.basic.cityName).find(AddCity.class).size()==0) {
+                                AddCity addCity = new AddCity();
+                                addCity.setResponseText(responseText);
+                                addCity.save();
+                            }else {
+                                AddCity addCity = new AddCity();
+                                addCity.setResponseText(responseText);
+                                addCity.updateAll("cityname=?",weather.basic.cityName);
+                            }
                         }else {
                             Toast.makeText(WeatherActivity.this,"获取预报天气信息失败",Toast.LENGTH_SHORT).show();
                         }
@@ -225,6 +283,25 @@ public class WeatherActivity extends AppCompatActivity {
                             editor.apply();
                             mWeatherId=weatherCond.basic.weatherId;
                             showWeatherCondInfo(weatherCond);
+                            if (DataSupport.where("cityname=?",weatherCond.basic.cityName).find(AddCity.class).size()==0) {
+                                AddCity addCity = new AddCity();
+                                addCity.setWeatherId(weatherCond.basic.weatherId);
+                                addCity.setCityName(weatherCond.basic.cityName);
+                                addCity.setWeatherInfo(weatherCond.now.weatherInfo);
+                                addCity.setWeatherTmp(weatherCond.now.tmp);
+                                addCity.setResponseCondText(responseText);
+                                addCityList.add(addCity);
+                                addCity.save();
+                               // adapter.notifyItemInserted(addCityList.size()-1);
+                                adapter.notifyDataSetChanged();
+                                recyclerView.scrollToPosition(addCityList.size()-1);
+                            }else {
+                                AddCity addCity = new AddCity();
+                                addCity.setWeatherInfo(weatherCond.now.weatherInfo);
+                                addCity.setWeatherTmp(weatherCond.now.tmp);
+                                addCity.setResponseCondText(responseText);
+                                addCity.updateAll("cityname=?",weatherCond.basic.cityName);
+                            }
                         }else {
                             Toast.makeText(WeatherActivity.this,"获取实况天气信息失败..",Toast.LENGTH_SHORT).show();
                         }
@@ -251,32 +328,7 @@ public class WeatherActivity extends AppCompatActivity {
         fengSu.setText(fengsuNow+"米/秒");
         shiDu.setText(shiduNow+"%");
         updateTimeText.setText("更新时间："+updateTime);
-        if ("晴".equals(weatherNowInfo)){
-            weatherIconText.setText(R.string.icon_qing);
-            weatherIconText.setTypeface(iconfont);
-        }else if ("多云".equals(weatherNowInfo)){
-            weatherIconText.setText(R.string.icon_duoyun);
-            weatherIconText.setTypeface(iconfont);
-        }else if (weatherNowInfo.endsWith("雪")){
-            if (!"雨夹雪".equals(weatherNowInfo)) {
-                weatherIconText.setText(R.string.icon_xue);
-                weatherIconText.setTypeface(iconfont);
-            }
-        }else if ("阴".equals(weatherNowInfo)){
-            weatherIconText.setText(R.string.icon_yin);
-            weatherIconText.setTypeface(iconfont);
-        }else if (weatherNowInfo.endsWith("雨")){
-            if ("小雨".equals(weatherNowInfo)||"中雨".equals(weatherNowInfo)||"雨夹雪".equals(weatherNowInfo)){
-                weatherIconText.setText(R.string.icon_xiaoyu);
-                weatherIconText.setTypeface(iconfont);
-            }else {
-                weatherIconText.setText(R.string.icon_dayu);
-                weatherIconText.setTypeface(iconfont);
-            }
-        }else if (weatherNowInfo.indexOf("雷")!=-1){
-            weatherIconText.setText(R.string.icon_lei);
-            weatherIconText.setTypeface(iconfont);
-        }
+        WeatherIconJud.getWeathetIcon(iconfont,weatherIconText,weatherNowInfo);
     }
     private void showWeatherInfo(Weather weather){
         forecastLayout.removeAllViews();
@@ -295,35 +347,7 @@ public class WeatherActivity extends AppCompatActivity {
                 count=1;
                 continue;
             }
-            if ("晴".equals(yuaboInfo)){
-                yobaoIcon.setText(R.string.icon_qing);
-                yobaoIcon.setTypeface(iconfont);
-            }else if (yuaboInfo.endsWith("多云")){
-                yobaoIcon.setText(R.string.icon_duoyun);
-                yobaoIcon.setTypeface(iconfont);
-            }else if (yuaboInfo.endsWith("雪")){
-                if (!"雨夹雪".equals(yuaboInfo)) {
-                    yobaoIcon.setText(R.string.icon_xue);
-                    yobaoIcon.setTypeface(iconfont);
-                }
-            }else if ("阴".equals(yuaboInfo)){
-                yobaoIcon.setText(R.string.icon_yin);
-                yobaoIcon.setTypeface(iconfont);
-            }else if (yuaboInfo.endsWith("雨")){
-                if ("小雨".equals(yuaboInfo)||"中雨".equals(yuaboInfo)||"雨夹雪".equals(yuaboInfo)){
-                    yobaoIcon.setText(R.string.icon_xiaoyu);
-                    yobaoIcon.setTypeface(iconfont);
-                }else {
-                    yobaoIcon.setText(R.string.icon_dayu);
-                    yobaoIcon.setTypeface(iconfont);
-                }
-            }else if (yuaboInfo.indexOf("雷")!=-1){
-                yobaoIcon.setText(R.string.icon_lei);
-                yobaoIcon.setTypeface(iconfont);
-            }
-            else {
-                yobaoIcon.setText(yuaboInfo);
-            }
+            WeatherIconJud.getWeathetIcon(iconfont,yobaoIcon,yuaboInfo);
             forecastLayout.addView(view);
         }
         if (weather.aqi!=null){
@@ -339,5 +363,39 @@ public class WeatherActivity extends AppCompatActivity {
         weatherLayout.setVisibility(View.VISIBLE);
         Intent intent=new Intent(this, AutoUpdateService.class);
         startService(intent);
+    }
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        localBroadcastManager.unregisterReceiver(localReceiver);
+    }
+    class LocalReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent){
+            //Toast.makeText(WeatherActivity.this,"接收到广播",Toast.LENGTH_SHORT).show();
+            SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this);
+            String weatherId=prefs.getString("weather_id",null);
+            if (weatherId!=null){
+                List<AddCity> list=DataSupport.where("weatherid=?",weatherId).find(AddCity.class);
+                if (list.size()!=0) {
+                    AddCity addCity = list.get(0);
+                    String responseText = addCity.getResponseText();
+                    String responseCondText = addCity.getResponseCondText();
+                    if (responseText != null && responseCondText != null) {
+                        WeatherCond weatherCond = Utility.handlerWeatherNowResponse(responseCondText);
+                        mWeatherId = weatherCond.basic.weatherId;
+                        showWeatherCondInfo(weatherCond);
+                        Weather weather = Utility.handlerWeatherResponse(responseText);
+                        showWeatherInfo(weather);
+                    } else {
+                        requestWeatherCond(weatherId);
+                        requestWeather(weatherId);
+                    }
+                }else {
+                    requestWeatherCond(weatherId);
+                    requestWeather(weatherId);
+                }
+            }
+        }
     }
 }

@@ -14,10 +14,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:layout_marginLeft="35dp"
-            android:layout_marginRight="12dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginRight="9dp"
             android:textColor="#fff"
-            android:textSize="65sp"/>
+            android:textSize="65dp"/>
         <TextView
             android:id="@+id/weather_icon"
             android:layout_width="wrap_content"
@@ -25,7 +25,7 @@
             android:layout_toLeftOf="@id/temperature_current"
             android:layout_centerVertical="true"
             android:textColor="#fff"
-            android:textSize="40sp"/>
+            android:textSize="38dp"/>
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="wrap_content"
@@ -38,15 +38,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
-                android:textSize="15sp"
-                android:textColor="#d0ffffff" />
+                android:textSize="14dp"
+                android:textColor="#d5ffffff" />
             <TextView
                 android:id="@+id/temperature_min"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
                 android:textColor="#96ffffff"
-                android:textSize="15sp" />
+                android:textSize="14dp" />
         </LinearLayout>
     </RelativeLayout>
     <TextView
@@ -55,15 +55,15 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:textColor="#fff"
-        android:textSize="17sp"/>
+        android:textSize="17dp"/>
     <TextView
         android:id="@+id/tigan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="10dp"
-        android:textColor="#a8ffffff"
-        android:textSize="14sp"/>
+        android:textColor="#b5ffffff"
+        android:textSize="14dp"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -79,7 +79,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#fff"
-                android:textSize="17sp"
+                android:textSize="17dp"
                 android:text="@string/icon_shidu"/>
             <TextView
                 android:id="@+id/shidu_text"
@@ -87,7 +87,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#fff"
-                android:textSize="14sp"/>
+                android:textSize="14dp"/>
         </LinearLayout>
         <View
             android:layout_width="1dp"
@@ -104,7 +104,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#fff"
-                android:textSize="17sp"
+                android:textSize="17dp"
                 android:text="@string/icon_fensu"/>
             <TextView
                 android:id="@+id/fengsui_text"
@@ -112,7 +112,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#fff"
-                android:textSize="14sp"/>
+                android:textSize="14dp"/>
         </LinearLayout>
         <View
             android:layout_width="1dp"
@@ -129,7 +129,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#fff"
-                android:textSize="17sp"
+                android:textSize="17dp"
                 android:text="@string/icon_ziwaixian"/>
             <TextView
                 android:id="@+id/ziwaixian_text"
@@ -137,7 +137,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#fff"
-                android:textSize="14sp"
+                android:textSize="14dp"
                 android:text="暂无"/>
         </LinearLayout>
     </LinearLayout>

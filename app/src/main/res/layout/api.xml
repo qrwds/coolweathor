@@ -12,7 +12,7 @@
         android:layout_marginTop="15dp"
         android:text="空气质量"
         android:textColor="#fff"
-        android:textSize="20sp"/>
+        android:textSize="20dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,7 +36,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:textColor="#fff"
-                    android:textSize="40sp"/>
+                    android:textSize="40dp"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -62,7 +62,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:textColor="#fff"
-                    android:textSize="40sp"/>
+                    android:textSize="40dp"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

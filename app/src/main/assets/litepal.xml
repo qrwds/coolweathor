@@ -8,5 +8,8 @@
         <mapping class="com.coolweather.android.db.Province"/>
         <mapping class="com.coolweather.android.db.City"/>
         <mapping class="com.coolweather.android.db.Country"/>
+        <mapping class="com.coolweather.android.db.AllCityInfo"/>
+        <mapping class="com.coolweather.android.db.StorageCity"/>
+        <mapping class="com.coolweather.android.db.AddCity"/>
     </list>
 </litepal>

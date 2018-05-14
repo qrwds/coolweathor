@@ -50,14 +50,72 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:layout_marginRight="5dp"
-            android:textSize="10sp"
+            android:textSize="10dp"
             android:textColor="#fff"/>
     </LinearLayout>
-            <fragment
-                android:id="@+id/choose_area_fragment"
-                android:name="com.coolweather.android.ChooseAreaFragment"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="start"/>
+                android:background="#fff"
+                android:layout_gravity="start"
+                android:orientation="vertical">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="70dp"
+                    android:background="@color/colorPrimary">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentBottom="true"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginBottom="10dp"
+                        android:text="我的位置"
+                        android:textSize="20dp"
+                        android:textColor="#fff"/>
+                </RelativeLayout>
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/add_city_recyclerview"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1">
+
+                </android.support.v7.widget.RecyclerView>
+               <View
+                   android:layout_width="match_parent"
+                   android:layout_height="1dp"
+                   android:background="#808080"/>
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="145dp">
+                <LinearLayout
+                    android:id="@+id/add_city_layout"
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left">
+
+                    <Button
+                        android:id="@+id/add_city_button"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_margin="10dp"
+                        android:background="@drawable/ic_add_lcation"
+                        android:layout_gravity="center_vertical"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="10dp"
+                        android:layout_gravity="center_vertical"
+                        android:text="添加位置"
+                        android:textSize="16dp"
+                        android:textColor="#000000"/>
+                </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
         </android.support.v4.widget.DrawerLayout>
 </FrameLayout>
