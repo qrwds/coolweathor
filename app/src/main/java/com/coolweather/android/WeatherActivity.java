@@ -151,6 +151,8 @@ public class WeatherActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager=new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
+        Intent intent=new Intent(this, AutoUpdateService.class);
+        startService(intent);
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString=prefs.getString("weather",null);
         String weatherCondString=prefs.getString("weatherCond",null);
@@ -162,21 +164,7 @@ public class WeatherActivity extends AppCompatActivity {
             mWeatherId=getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeatherCond(mWeatherId);
-                   /*AddCity addCity = new AddCity();
-                    addCity.setWeatherId(weatherCond.basic.weatherId);
-                    addCity.setCityName(weatherCond.basic.cityName);
-                    addCity.setWeatherInfo(weatherCond.now.weatherInfo);
-                    addCity.setWeatherTmp(weatherCond.now.tmp);
-                    addCity.save();
-                    addCityList=DataSupport.findAll(AddCity.class);
-                    adapter.notifyDataSetChanged();*/
         }
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
-            @Override
-            public void onRefresh(){
-                requestWeatherCond(mWeatherId);
-            }
-        });
         if(weatherString!=null){
             Weather weather= Utility.handlerWeatherResponse(weatherString);
             showWeatherInfo(weather);
@@ -184,6 +172,12 @@ public class WeatherActivity extends AppCompatActivity {
             String weatherId=getIntent().getStringExtra("weather_id");
             requestWeather(weatherId);
         }
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
+            @Override
+            public void onRefresh(){
+                requestWeatherCond(mWeatherId);
+            }
+        });
         String bingPic=prefs.getString("bing_pic",null);
         if (bingPic!=null){
             Glide.with(this).load(bingPic).into(bingPicImg);
@@ -247,6 +241,8 @@ public class WeatherActivity extends AppCompatActivity {
                                 AddCity addCity = new AddCity();
                                 addCity.setResponseText(responseText);
                                 addCity.updateAll("cityname=?",weather.basic.cityName);
+                                setAddCityListRefresh();
+                                adapter.notifyDataSetChanged();
                             }
                         }else {
                             Toast.makeText(WeatherActivity.this,"获取预报天气信息失败",Toast.LENGTH_SHORT).show();
@@ -301,6 +297,8 @@ public class WeatherActivity extends AppCompatActivity {
                                 addCity.setWeatherTmp(weatherCond.now.tmp);
                                 addCity.setResponseCondText(responseText);
                                 addCity.updateAll("cityname=?",weatherCond.basic.cityName);
+                                setAddCityListRefresh();
+                                adapter.notifyDataSetChanged();
                             }
                         }else {
                             Toast.makeText(WeatherActivity.this,"获取实况天气信息失败..",Toast.LENGTH_SHORT).show();
@@ -361,8 +359,13 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText.setText(carwash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
-        Intent intent=new Intent(this, AutoUpdateService.class);
-        startService(intent);
+    }
+   public void setAddCityListRefresh(){
+        addCityList.clear();
+        List<AddCity> list=DataSupport.findAll(AddCity.class);
+        for (AddCity addCity:list){
+            addCityList.add(addCity);
+        }
     }
     @Override
     protected void onDestroy(){
@@ -372,23 +375,24 @@ public class WeatherActivity extends AppCompatActivity {
     class LocalReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent){
-            //Toast.makeText(WeatherActivity.this,"接收到广播",Toast.LENGTH_SHORT).show();
             SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this);
+            String weatherString=prefs.getString("weather",null);
+            String weatherCondString=prefs.getString("weatherCond",null);
             String weatherId=prefs.getString("weather_id",null);
-            if (weatherId!=null){
-                List<AddCity> list=DataSupport.where("weatherid=?",weatherId).find(AddCity.class);
-                if (list.size()!=0) {
-                    AddCity addCity = list.get(0);
-                    String responseText = addCity.getResponseText();
-                    String responseCondText = addCity.getResponseCondText();
-                    if (responseText != null && responseCondText != null) {
-                        WeatherCond weatherCond = Utility.handlerWeatherNowResponse(responseCondText);
+            if (weatherId!=null) {
+                List<AddCity> list = DataSupport.where("weatherid=?", weatherId).find(AddCity.class);
+                if (list.size() != 0) {
+                    if (weatherCondString != null) {
+                        WeatherCond weatherCond = Utility.handlerWeatherNowResponse(weatherCondString);
                         mWeatherId = weatherCond.basic.weatherId;
                         showWeatherCondInfo(weatherCond);
-                        Weather weather = Utility.handlerWeatherResponse(responseText);
-                        showWeatherInfo(weather);
                     } else {
                         requestWeatherCond(weatherId);
+                    }
+                    if (weatherString != null) {
+                        Weather weather = Utility.handlerWeatherResponse(weatherString);
+                        showWeatherInfo(weather);
+                    } else {
                         requestWeather(weatherId);
                     }
                 }else {
