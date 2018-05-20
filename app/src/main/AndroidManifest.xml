@@ -25,6 +25,14 @@
             android:exported="true" />
 
         <activity android:name=".CityChoose"></activity>
+
+        <receiver android:name="com.coolweather.android.CoolweatherAppWidgetReceiver">
+            <intent-filter>
+                <action android:name="com.coolweather.android.action.UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_provider"/>
+        </receiver>
     </application>
 
 </manifest>
