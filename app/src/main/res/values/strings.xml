@@ -10,5 +10,5 @@
     <string name="icon_fensu">&#xe64c;</string>
     <string name="icon_shidu">&#xe62f;</string>
     <string name="icon_ziwaixian">&#xe621;</string>
-    <string name="beijing">{"HeWeather6":[{"basic":{"cid":"CN101010100","location":"北京","parent_city":"北京","admin_area":"北京","cnty":"中国","lat":"39.90498734","lon":"116.4052887","tz":"+8.00"},"update":{"loc":"2018-05-04 21:48","utc":"2018-05-04 13:48"},"status":"ok","now":{"cloud":"0","cond_code":"100","cond_txt":"晴","fl":"22","hum":"47","pcpn":"0.0","pres":"1005","tmp":"23","vis":"10","wind_deg":"188","wind_dir":"南风","wind_sc":"2","wind_spd":"10"}}]}</string>
+    <string name="icon_toumingdu">&#xe8d8;</string>
 </resources>

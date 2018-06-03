@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.coolweather.android.db.AddCity;
 import com.coolweather.android.db.AllCityInfo;
 import com.coolweather.android.db.StorageCity;
 import com.coolweather.android.util.DataBaseInit;
@@ -38,7 +39,7 @@ public class CityChoose extends AppCompatActivity {
     private List<StorageCity> storageCityList=new ArrayList<StorageCity>();
     private LocalBroadcastManager localBroadcastManager;
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.choose_city);
         allCityInfoList=DataSupport.where("citycoding=?","CN101340406").find(AllCityInfo.class);
@@ -92,13 +93,15 @@ public class CityChoose extends AppCompatActivity {
                         storageCity.save();
                     }
                     SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(CityChoose.this);
-                   SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(CityChoose.this).edit();
                     if (prefs.getString("weather",null)!=null&&prefs.getString("weatherCond",null)!=null) {
-                        editor.putString("weather_id", weatherId);
-                        editor.apply();
-                        Intent intent = new Intent("com.coolweather.android.LOCAL_BROADCAST");
-                        localBroadcastManager.sendBroadcast(intent);
-                        finish();
+                        if (DataSupport.where("cityname=?",allCityInfoList.get(i).getCityChineseName()).find(AddCity.class).size()>0) {
+                            finish();
+                        }else {
+                            Intent intent = new Intent("com.coolweather.android.LOCAL_BROADCAST");
+                            intent.putExtra("weather_id",weatherId);
+                            localBroadcastManager.sendBroadcast(intent);
+                            finish();
+                        }
                     }else {
                         Intent intent=new Intent(CityChoose.this,WeatherActivity.class);
                         intent.putExtra("weather_id",weatherId);
@@ -108,13 +111,15 @@ public class CityChoose extends AppCompatActivity {
                 }else {
                     weatherId=storageCityList.get(i).getWeatherId();
                     SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(CityChoose.this);
-                    SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(CityChoose.this).edit();
                     if (prefs.getString("weather",null)!=null&&prefs.getString("weatherCond",null)!=null) {
-                        editor.putString("weather_id", weatherId);
-                        editor.apply();
-                        Intent intent = new Intent("com.coolweather.android.LOCAL_BROADCAST");
-                        localBroadcastManager.sendBroadcast(intent);
-                        finish();
+                        if (DataSupport.where("cityname=?",storageCityList.get(i).getCityNameInfo()).find(AddCity.class).size()>0) {
+                            finish();
+                        }else {
+                            Intent intent = new Intent("com.coolweather.android.LOCAL_BROADCAST");
+                            intent.putExtra("weather_id",weatherId);
+                            localBroadcastManager.sendBroadcast(intent);
+                            finish();
+                        }
                     }else {
                         Intent intent=new Intent(CityChoose.this,WeatherActivity.class);
                         intent.putExtra("weather_id",weatherId);

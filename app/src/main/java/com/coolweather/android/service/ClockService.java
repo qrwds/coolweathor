@@ -10,7 +10,10 @@ import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
+import android.view.View;
 import android.widget.RemoteViews;
 import com.coolweather.android.CoolweatherAppWidgetReceiver;
 import com.coolweather.android.R;
@@ -26,9 +29,10 @@ public class ClockService extends Service {
     // 定时器
     private Timer timer;
     // 日期格式
-    private SimpleDateFormat sdf = new SimpleDateFormat("MM月dd日 ");
+    private SimpleDateFormat sdf = new SimpleDateFormat("MM月dd日");
     private SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
     private Calendar calendar=Calendar.getInstance();
+   // private SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     @Override
     public IBinder onBind(Intent intent) {
 
@@ -49,7 +53,7 @@ public class ClockService extends Service {
             public void run() {
                 updateView();
             }
-        }, 0, 1000*60);
+        }, 0, 1000);
     }
 
     /**
@@ -57,22 +61,26 @@ public class ClockService extends Service {
      */
     private void updateView() {
         // 时间
-        String[] weeks={"","周日","周一","周二","周三","星期四","星期五","星期六"};
-        String weekkStr=weeks[calendar.get(Calendar.DAY_OF_WEEK)];
-        String time = sdf1.format(new Date());
-        String date=sdf.format(new Date())+weekkStr;
-        /**
-         * 参数：1.包名2.小组件布局
-         */
+            String[] weeks = {"", "周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+            String weekkStr = weeks[calendar.get(Calendar.DAY_OF_WEEK)];
+            String time = sdf1.format(new Date());
+            String date = sdf.format(new Date()) + weekkStr;
+            if ((date.charAt(0) + "").equals("0")) {
+                date = date.substring(1, date.length());
+            }
+            /**
+             * 参数：1.包名2.小组件布局
+             */
+
+            // 显示当前事件
         RemoteViews rViews = new RemoteViews(getPackageName(), R.layout.coolweather_widget_layout);
-        // 显示当前事件
-        rViews.setTextViewText(R.id.widget_time, time);
-        rViews.setTextViewText(R.id.widget_date, date);
-        // 刷新
-        AppWidgetManager manager = AppWidgetManager
-                .getInstance(this);
-        ComponentName cName = new ComponentName(this,CoolweatherAppWidgetReceiver.class);
-        manager.updateAppWidget(cName, rViews);
+            rViews.setTextViewText(R.id.widget_time, time);
+            rViews.setTextViewText(R.id.widget_date, date);
+            // 刷新
+            AppWidgetManager manager = AppWidgetManager
+                    .getInstance(this);
+            ComponentName cName = new ComponentName(this, CoolweatherAppWidgetReceiver.class);
+            manager.updateAppWidget(cName, rViews);
     }
 
     @Override

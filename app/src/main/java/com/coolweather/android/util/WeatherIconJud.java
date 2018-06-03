@@ -23,12 +23,15 @@ public class WeatherIconJud {
             if (!"雨夹雪".equals(weatherInfo)) {
                 textView.setText(R.string.icon_xue);
                 textView.setTypeface(iconfont);
+            }else {
+                textView.setText(R.string.icon_xue);
+                textView.setTypeface(iconfont);
             }
         }else if ("阴".equals(weatherInfo)){
             textView.setText(R.string.icon_yin);
             textView.setTypeface(iconfont);
         }else if (weatherInfo.endsWith("雨")){
-            if ("小雨".equals(weatherInfo)||"中雨".equals(weatherInfo)||"雨夹雪".equals(weatherInfo)){
+            if ("小雨".equals(weatherInfo)||"中雨".equals(weatherInfo)){
                 textView.setText(R.string.icon_xiaoyu);
                 textView.setTypeface(iconfont);
             }else {
@@ -38,6 +41,35 @@ public class WeatherIconJud {
         }else if (weatherInfo.indexOf("雷")!=-1){
             textView.setText(R.string.icon_lei);
             textView.setTypeface(iconfont);
+        }else {
+            textView.setText(weatherInfo);
         }
+    }
+   public static  String getWeatherIconFontUnicode(String weatherInfo){
+        if ("晴".equals(weatherInfo)){
+           return "\ue61f";
+        }else if ("多云".equals(weatherInfo)){
+            return "\ue631";
+
+        }else if (weatherInfo.endsWith("雪")){
+            if (!"雨夹雪".equals(weatherInfo)) {
+                return "\ue623";
+            }
+            else {
+                return "\ue623";
+            }
+        }else if ("阴".equals(weatherInfo)){
+            return "\ue624";
+        }else if (weatherInfo.endsWith("雨")){
+            if ("小雨".equals(weatherInfo)||"中雨".equals(weatherInfo)||"雨夹雪".equals(weatherInfo)){
+                return "\ue622";
+            }else {
+                return "\ue61c";
+            }
+        }else if (weatherInfo.indexOf("雷")!=-1){
+            return "\ue61e";
+        }else {
+        return "no_find";
+    }
     }
 }

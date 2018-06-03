@@ -10,6 +10,9 @@
         android:icon="@mipmap/sony_weather"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="ayzydoSfxE4KFlDLtxBhkKNRAYeGHmac" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,19 +23,39 @@
         <activity android:name=".WeatherActivity" />
 
         <service
+            android:name=".service.ClockService"
+            android:enabled="true"
+            android:exported="true" />
+        <service
             android:name=".service.AutoUpdateService"
             android:enabled="true"
             android:exported="true" />
+        <service android:name="com.baidu.location.f" android:enabled="true" android:process=":remote" />
+        <activity android:name=".CityChoose" />
 
-        <activity android:name=".CityChoose"></activity>
-
-        <receiver android:name="com.coolweather.android.CoolweatherAppWidgetReceiver">
+        <receiver android:name=".CoolweatherAppWidgetReceiver">
             <intent-filter>
-                <action android:name="com.coolweather.android.action.UPDATE"/>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.coolweather.android.action.UPDATE" />
+                <action android:name="com.coolweather.android.action.CHANGE_ALPHA" />
             </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/weather_widget_provider"/>
-        </receiver>
-    </application>
 
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_provider" />
+        </receiver>
+
+        <activity android:name=".SetActivity"></activity>
+    </application>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 </manifest>

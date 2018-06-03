@@ -44,6 +44,9 @@ import org.litepal.crud.DataSupport;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import okhttp3.Call;
@@ -85,7 +88,9 @@ public class WeatherActivity extends AppCompatActivity {
     private List<AddCity> addCityList;
     private AddCityAdapter adapter;
     private LinearLayout addLocation;
-
+    private LinearLayout setLayout;
+    private  boolean locationSwitch=false;
+    private String nowLocCityName;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,6 +103,8 @@ public class WeatherActivity extends AppCompatActivity {
         localBroadcastManager=LocalBroadcastManager.getInstance(this);
         intentFilter=new IntentFilter();
         intentFilter.addAction("com.coolweather.android.LOCAL_BROADCAST");
+        intentFilter.addAction("com.coolweather.android.LOCAL_BROADCAST_UPDATE_SHOW");
+        intentFilter.addAction("com.coolweather.android.LOCAL_BROADCAST_LOCATION_STATE");
         localReceiver=new LocalReceiver();
         localBroadcastManager.registerReceiver(localReceiver,intentFilter);
         addCityList= DataSupport.findAll(AddCity.class);
@@ -128,6 +135,7 @@ public class WeatherActivity extends AppCompatActivity {
         drawerLayout=(DrawerLayout)findViewById(R.id.drawer_layout);
         navButton=(Button)findViewById(R.id.nav_button);
         addLocation=(LinearLayout) findViewById(R.id.add_city_layout);
+        setLayout=(LinearLayout)findViewById(R.id.set_layout);
         recyclerView=(RecyclerView)findViewById(R.id.add_city_recyclerview);
         iconfont=Typeface.createFromAsset(getAssets(),"iconfont/iconfont.ttf");
         shiDuIcon.setTypeface(iconfont);
@@ -147,13 +155,24 @@ public class WeatherActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        setLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(WeatherActivity.this,SetActivity.class);
+                startActivity(intent);
+            }
+        });
+        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
+        locationSwitch=prefs.getBoolean("switch_state",false);
+        nowLocCityName=prefs.getString("loc_city_name",null);
+        //Toast.makeText(this,nowLocCityName,Toast.LENGTH_SHORT).show();
         adapter=new AddCityAdapter(addCityList,iconfont,this);
+        if (locationSwitch&&nowLocCityName!=null){
+            adapter.setLocationSwitch(locationSwitch,true,nowLocCityName);
+        }
         LinearLayoutManager layoutManager=new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
-        Intent intent=new Intent(this, AutoUpdateService.class);
-        startService(intent);
-        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString=prefs.getString("weather",null);
         String weatherCondString=prefs.getString("weatherCond",null);
         if (weatherCondString!=null){
@@ -178,12 +197,17 @@ public class WeatherActivity extends AppCompatActivity {
                 requestWeatherCond(mWeatherId);
             }
         });
-        String bingPic=prefs.getString("bing_pic",null);
-        if (bingPic!=null){
-            Glide.with(this).load(bingPic).into(bingPicImg);
-        }else {
-            loadBingPic();
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent=new Intent(WeatherActivity.this, AutoUpdateService.class);
+                startService(intent);
+            }
+        });
+
+      // View view= LayoutInflater.from(this).inflate(R.layout.add_locatin,recyclerView,false);
+        //AddCityAdapter.ViewHolder viewHolder=new AddCityAdapter.ViewHolder(view);
+      // recyclerView.addView(view,0);
     }
     private void loadBingPic(){
         String requestBingPic="http://guolin.tech/api/bing_pic";
@@ -238,11 +262,10 @@ public class WeatherActivity extends AppCompatActivity {
                                 addCity.setResponseText(responseText);
                                 addCity.save();
                             }else {
+
                                 AddCity addCity = new AddCity();
                                 addCity.setResponseText(responseText);
                                 addCity.updateAll("cityname=?",weather.basic.cityName);
-                                setAddCityListRefresh();
-                                adapter.notifyDataSetChanged();
                             }
                         }else {
                             Toast.makeText(WeatherActivity.this,"获取预报天气信息失败",Toast.LENGTH_SHORT).show();
@@ -308,9 +331,8 @@ public class WeatherActivity extends AppCompatActivity {
                 });
             }
         });
-        loadBingPic();
     }
-    private void showWeatherCondInfo(WeatherCond weatherCond){
+    public void showWeatherCondInfo(WeatherCond weatherCond){
         String cityName=weatherCond.basic.cityName;
         String updateTime=weatherCond.update.updateLocTime.split(" ")[1];
         String currentTemperature=weatherCond.now.tmp+"°";
@@ -327,8 +349,20 @@ public class WeatherActivity extends AppCompatActivity {
         shiDu.setText(shiduNow+"%");
         updateTimeText.setText("更新时间："+updateTime);
         WeatherIconJud.getWeathetIcon(iconfont,weatherIconText,weatherNowInfo);
+        int bgImageId=-1;
+       if ((bgImageId=backgroundSelect(weatherNowInfo))!=-1){
+           bingPicImg.setImageResource(bgImageId);
+       }else {
+           SharedPreferences prefs=PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this);
+           String bingPic = prefs.getString("bing_pic", null);
+           if (bingPic != null) {
+               Glide.with(this).load(bingPic).into(bingPicImg);
+           } else {
+               loadBingPic();
+           }
+       }
     }
-    private void showWeatherInfo(Weather weather){
+    public void showWeatherInfo(Weather weather){
         forecastLayout.removeAllViews();
         int count=0;
         for (Forecast forecast:weather.forecastList){
@@ -359,46 +393,151 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText.setText(carwash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
+        Intent intent = new Intent(CoolweatherAppWidgetReceiver.UPDATE_ACTION);
+        sendBroadcast(intent);
     }
    public void setAddCityListRefresh(){
-        addCityList.clear();
-        List<AddCity> list=DataSupport.findAll(AddCity.class);
-        for (AddCity addCity:list){
-            addCityList.add(addCity);
-        }
+           addCityList.clear();
+           List<AddCity> list = DataSupport.findAll(AddCity.class);
+       int i=0;  adapter.cityNameIndexMap.clear();
+           for (AddCity addCity : list) {
+               addCityList.add(addCity);
+               adapter.cityNameIndexMap.put(addCity.getCityName(),i);
+               i++;
+             }
+       if (locationSwitch){
+            adapter.setLocationSwitch(locationSwitch,false,nowLocCityName);
+       }
     }
     @Override
     protected void onDestroy(){
         super.onDestroy();
         localBroadcastManager.unregisterReceiver(localReceiver);
     }
+    private int backgroundSelect(String weatherInfo){
+        Calendar c= Calendar.getInstance();
+        int mons=c.get(Calendar.MONTH)+1;
+        SimpleDateFormat sdf = new SimpleDateFormat("HH");
+        String time = sdf.format(new Date());
+        if (Integer.parseInt(time)>20||Integer.parseInt(time)<3){
+           if(mons>=3&&mons<=8) {
+               if (weatherInfo.equals("多云") || weatherInfo.equals("晴转多云")) {
+                   return R.drawable.night_partlycloudy;
+               } else if (weatherInfo.equals("阴")) {
+                   return R.drawable.night_cloudy;
+               } else if (weatherInfo.equals("晴") || weatherInfo.equals("多云转晴")) {
+                   return R.drawable.night_clearsky;
+               } else if (weatherInfo.indexOf('雨') != -1 && !weatherInfo.equals("雨夹雪")) {
+                   return R.drawable.night_rain;
+               } else if (weatherInfo.indexOf('雪') != -1) {
+                   return R.drawable.night_snow;
+               }
+           } else {
+                   if (weatherInfo.equals("多云") || weatherInfo.equals("晴转多云")){
+                       return R.drawable.winter_night_clearsky;
+                   }else if (weatherInfo.equals("阴")){
+                       return R.drawable.winter_night_cloudy;
+                   }else if(weatherInfo.equals("晴")||weatherInfo.equals("多云转晴")){
+                       return R.drawable.winter_night_clearsky;
+                   }else if (weatherInfo.indexOf('雨')!=-1 && !weatherInfo.equals("雨夹雪")){
+                       return R.drawable.winter_night_rain;
+                   }else if (weatherInfo.indexOf('雪')!=-1){
+                       return R.drawable.day_snow;
+                   }
+                }
+        }
+        else {
+            if(mons>=3&&mons<=8) {
+                if (weatherInfo.equals("多云") || weatherInfo.equals("晴转多云")) {
+                    return R.drawable.day_partlycloudy;
+                } else if (weatherInfo.equals("阴")) {
+                    return R.drawable.day_cloudy;
+                } else if (weatherInfo.equals("晴") || weatherInfo.equals("多云转晴")) {
+                    return R.drawable.day_clearsky;
+                } else if (weatherInfo.indexOf('雨') != -1 && !weatherInfo.equals("雨夹雪")) {
+                    return R.drawable.day_rain;
+                } else if (weatherInfo.indexOf('雪') != -1) {
+                    return R.drawable.day_snow;
+                }else if (weatherInfo.indexOf('雾')!=-1){
+                    return R.drawable.day_fog;
+                }
+            } else {
+                if (weatherInfo.equals("多云") || weatherInfo.equals("晴转多云")){
+                    return R.drawable.winter_day_clearsky;
+                }else if (weatherInfo.equals("阴")){
+                    return R.drawable.winter_day_cloudy;
+                }else if(weatherInfo.equals("晴")||weatherInfo.equals("多云转晴")){
+                    return R.drawable.winter_day_clearsky;
+                }else if (weatherInfo.indexOf('雨')!=-1 && !weatherInfo.equals("雨夹雪")){
+                    return R.drawable.winter_day_rain;
+                }else if (weatherInfo.indexOf('雪')!=-1){
+                    return R.drawable.day_snow;
+                }else if (weatherInfo.indexOf('雾')!=-1){
+                    return R.drawable.winter_day_fog;
+                }
+            }
+        }
+        return -1;
+    }
+    public void setmWeatherId(String weatherId){
+        mWeatherId=weatherId;
+    }
     class LocalReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent){
             SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this);
-            String weatherString=prefs.getString("weather",null);
-            String weatherCondString=prefs.getString("weatherCond",null);
-            String weatherId=prefs.getString("weather_id",null);
-            if (weatherId!=null) {
-                List<AddCity> list = DataSupport.where("weatherid=?", weatherId).find(AddCity.class);
-                if (list.size() != 0) {
-                    if (weatherCondString != null) {
-                        WeatherCond weatherCond = Utility.handlerWeatherNowResponse(weatherCondString);
-                        mWeatherId = weatherCond.basic.weatherId;
-                        showWeatherCondInfo(weatherCond);
-                    } else {
-                        requestWeatherCond(weatherId);
-                    }
-                    if (weatherString != null) {
-                        Weather weather = Utility.handlerWeatherResponse(weatherString);
-                        showWeatherInfo(weather);
-                    } else {
-                        requestWeather(weatherId);
-                    }
-                }else {
+           String weatherString=prefs.getString("weather",null);
+          String weatherCondString=prefs.getString("weatherCond",null);
+            switch (intent.getAction()){
+                case "com.coolweather.android.LOCAL_BROADCAST":
+                    String weatherId=intent.getStringExtra("weather_id");
                     requestWeatherCond(weatherId);
                     requestWeather(weatherId);
-                }
+                    break;
+                    /*String weatherId=prefs.getString("weather_id",null);
+                    if (weatherId!=null) {
+                        List<AddCity> list = DataSupport.where("weatherid=?", weatherId).find(AddCity.class);
+                        if (list.size() != 0) {
+                            if (weatherCondString != null) {
+                                WeatherCond weatherCond = Utility.handlerWeatherNowResponse(weatherCondString);
+                                mWeatherId = weatherCond.basic.weatherId;
+                                showWeatherCondInfo(weatherCond);
+                            } else {
+                                requestWeatherCond(weatherId);
+                            }
+                            if (weatherString != null) {
+                                Weather weather = Utility.handlerWeatherResponse(weatherString);
+                                showWeatherInfo(weather);
+                            } else {
+                                requestWeather(weatherId);
+                            }
+                        }else {
+                            requestWeatherCond(weatherId);
+                            requestWeather(weatherId);
+                        }
+                    }*/
+                case "com.coolweather.android.LOCAL_BROADCAST_UPDATE_SHOW":
+                    if (weatherCondString!=null&&weatherString!=null){
+                        WeatherCond weatherCond = Utility.handlerWeatherNowResponse(weatherCondString);
+                        mWeatherId=weatherCond.basic.weatherId;
+                        showWeatherCondInfo(weatherCond);
+                        Weather weather = Utility.handlerWeatherResponse(weatherString);
+                        showWeatherInfo(weather);
+                        setAddCityListRefresh();
+                        adapter.notifyDataSetChanged();
+                        //recyclerView.add
+                    }
+                    break;
+                case "com.coolweather.android.LOCAL_BROADCAST_LOCATION_STATE":
+                    locationSwitch=intent.getBooleanExtra("is_switch",false);
+                    String nowLocWeatherId=intent.getStringExtra("weather_id");
+                    nowLocCityName=intent.getStringExtra("city_name");
+                    mWeatherId=nowLocWeatherId;
+                    adapter.setLocationSwitch(locationSwitch,true,nowLocCityName);
+                    adapter.notifyDataSetChanged();
+                    break;
+                default:
+                    break;
             }
         }
     }
