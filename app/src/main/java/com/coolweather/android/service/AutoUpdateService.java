@@ -11,6 +11,7 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.media.MediaMetadataCompat;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.coolweather.android.CoolweatherAppWidgetReceiver;
@@ -53,9 +54,7 @@ public class AutoUpdateService extends Service {
        // updateWeather();
         //updateBingPic();
             updateAddCity();
-        try{ Thread.sleep(3000);}catch (Exception e){}
-        Intent i1 = new Intent("com.coolweather.android.LOCAL_BROADCAST_UPDATE_SHOW");
-        LocalBroadcastManager.getInstance(this).sendBroadcast(i1);
+       // try{ Thread.sleep(3000);}catch (Exception e){}
         Intent intent1 = new Intent(CoolweatherAppWidgetReceiver.UPDATE_ACTION);
         this.sendBroadcast(intent1);
             AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
@@ -155,9 +154,9 @@ public class AutoUpdateService extends Service {
                             addCity.setWeatherTmp(weatherCond.now.tmp);
                             addCity.setResponseCondText(responseText);
                             addCity.updateAll("cityname=?", weatherCond.basic.cityName);
-                            isRequestWeatherCond=true;
-                        }else {
-                            isError=true;
+                            Intent i1 = new Intent("com.coolweather.android.LOCAL_BROADCAST_UPDATE_SHOW");
+                            LocalBroadcastManager.getInstance(AutoUpdateService.this).sendBroadcast(i1);
+                            //Log.d("auto_update","ok");
                         }
                     }
                 });
@@ -182,9 +181,8 @@ public class AutoUpdateService extends Service {
                             AddCity addCity = new AddCity();
                             addCity.setResponseText(responseText);
                             addCity.updateAll("cityname=?",weather.basic.cityName);
-                            isRequestWeather=true;
-                        }else {
-                            isError=true;
+                            Intent i1 = new Intent("com.coolweather.android.LOCAL_BROADCAST_UPDATE_SHOW");
+                            LocalBroadcastManager.getInstance(AutoUpdateService.this).sendBroadcast(i1);
                         }
                     }
                 });

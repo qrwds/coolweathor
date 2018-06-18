@@ -197,13 +197,13 @@ public class WeatherActivity extends AppCompatActivity {
                 requestWeatherCond(mWeatherId);
             }
         });
-        new Thread(new Runnable() {
+       /* new Thread(new Runnable() {
             @Override
-            public void run() {
+            public void run() {*/
                 Intent intent=new Intent(WeatherActivity.this, AutoUpdateService.class);
                 startService(intent);
-            }
-        });
+          /*  }
+        });*/
 
       // View view= LayoutInflater.from(this).inflate(R.layout.add_locatin,recyclerView,false);
         //AddCityAdapter.ViewHolder viewHolder=new AddCityAdapter.ViewHolder(view);
